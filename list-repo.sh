@@ -1,24 +1,34 @@
 #!/bin/bash
 
-# Vérifie si gh CLI est disponible
-if ! command -v gh &> /dev/null; then
-  echo "❌ GitHub CLI (gh) non trouvé. Installe-le ici : https://cli.github.com/"
-  exit 1
-fi
+# Nom de ton utilisateur GitHub
+USERNAME="wilonweb"
 
-# Sélection du type
 echo "🔍 Quel type de dépôts veux-tu afficher ?"
-select TYPE in "all" "public" "private"; do
-  case $TYPE in
-    all|public|private)
-      break
-      ;;
-    *)
-      echo "❌ Choix invalide. Réessaie."
-      ;;
-  esac
-done
+echo "1) Tous les dépôts"
+echo "2) Dépôts publics"
+echo "3) Dépôts privés"
+echo "4) Dépôts template (modèles)"  # ✅ Ajout ici
+read -p "#? " choice
 
-# Lister les repos
-echo "📦 Dépôts $TYPE :"
-gh repo list --visibility "$TYPE" --limit 100 --json name,visibility,description -q '.[] | "\(.visibility) - \(.name): \(.description // "Aucune description")"'
+case $choice in
+  1)
+    echo "📦 Tous les dépôts :"
+    gh repo list "$USERNAME" --limit 100
+    ;;
+  2)
+    echo "🌐 Dépôts publics :"
+    gh repo list "$USERNAME" --visibility public --limit 100
+    ;;
+  3)
+    echo "🔐 Dépôts privés :"
+    gh repo list "$USERNAME" --visibility private --limit 100
+    ;;
+  4)
+    echo "📁 Dépôts template (modèles) :"
+    gh repo list "$USERNAME" --source --json name,isTemplate,visibility \
+      -q '.[] | select(.isTemplate==true) | "\(.visibility | ascii_upcase) - \(.name)"'
+    ;;
+  *)
+    echo "❌ Choix invalide. Veuillez entrer un chiffre entre 1 et 4."
+    ;;
+esac
