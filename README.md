@@ -1,91 +1,166 @@
+# ⚙️ Dev Tools — Outils de Terminal pour GitHub & Fichiers
 
-# 🛠️ Tools Bash : Menu interactif Git Bash
+Ce dossier regroupe des **fonctions Bash/Zsh personnalisées**, regroupées dans deux menus :
 
-Ce projet ajoute une fonction `tools` dans votre terminal Git Bash, permettant d'exécuter des commandes utiles via un menu interactif.
+- `tools` → arborescence, concaténation de fichiers `.sh`, `.js`, `.md`...
+- `github` → actions GitHub via la CLI `gh`
 
----
-
-## ✅ Installation
-
-1. Ouvrez votre fichier `.bashrc` :
-   ```bash
-   code ~/.bashrc
-
-
-2. Collez le bloc suivant à la fin du fichier :
-
-   ```bash
-   function tools() { 
-     echo "Que veux-tu faire ?"
-     echo "1) Afficher l'arborescence (structure.txt)"
-     echo "2) Lister les fichiers .sh (liste-sh.txt)"
-     echo "3) Quitter"
-     read -p "Ton choix : " choice
-
-     case $choice in
-       1)
-         echo "📁 Génération de l'arborescence dans structure.txt..."
-         find . | awk -F/ '{ indent = ""; for(i=2; i<NF; i++) indent = indent "│   "; if (NF>1) print indent "├── " $NF; else print $0; }' > structure.txt
-         echo "✅ Terminé"
-         ;;
-       2)
-         echo "🔍 Liste des fichiers .sh dans liste-sh.txt..."
-         find . -type f -name "*.sh" > liste-sh.txt
-         echo "✅ Terminé"
-         ;;
-       3)
-         echo "👋 Bye !"
-         ;;
-       *)
-         echo "❌ Choix invalide"
-         ;;
-     esac
-   }
-   ```
-
-3. Rechargez votre `.bashrc` :
-
-   ```bash
-   source ~/.bashrc
-   ```
+Ces deux menus sont disponibles directement dans ton terminal.
 
 ---
 
-## 🚀 Utilisation
+## 🧰 Commandes disponibles
 
-Dans n'importe quel dossier, ouvrez Git Bash et tapez simplement :
+### 📁 `tools` (menu général)
 
 ```bash
 tools
+````
+
+Propose :
+
+* Générer un fichier `structure.txt` avec l’arborescence
+* Lister les fichiers `.sh`
+* Concaténer tous les fichiers `.js`, `.sh`, `.md`
+* Lancer le menu GitHub
+
+### 🐙 `github` (menu GitHub CLI)
+
+```bash
+github
 ```
 
-Un menu s’affichera pour choisir l’action :
+Permet de :
+
+* Créer un dépôt GitHub (`gh repo create`)
+* Supprimer un dépôt GitHub
+* Lister les dépôts
+* Passer un repo en public
+* Passer tous les repos en privé
+* Modifier la visibilité d’un dépôt
+
+---
+
+## 📁 Organisation
 
 ```
-Que veux-tu faire ?
-1) Afficher l'arborescence (structure.txt)
-2) Lister les fichiers .sh (liste-sh.txt)
-3) Quitter
+dev-tools/
+├── bash-tools/
+│   ├── bashrc.sh          ← Toutes les fonctions sont là
+│   ├── get-structure.sh   ← Script brut pour structure + .sh
+│   └── github.sh          ← Menu GitHub seul (doublon de bashrc.sh)
+├── github-tools/
+│   ├── create-repo.sh
+│   ├── delete-repo.sh
+│   ├── list-repo.sh
+│   ├── make-public.sh
+│   ├── private-all.sh
+│   ├── togle-visibility.sh
+│   └── liste-template.sh
+└── README.md              ← Ce fichier
 ```
 
 ---
 
-## 📂 Résultats
+## 🔧 Modifier / Ajouter une fonction
 
-* `structure.txt` : contient la structure du dossier avec indentation.
-* `liste-sh.txt` : contient la liste de tous les fichiers `.sh` présents dans le dossier et ses sous-dossiers.
+Tout se passe dans ce fichier :
+
+```bash
+~/Documents/VisualStudioCode/dev-tools/bash-tools/bashrc.sh
+```
+
+Ajoute une nouvelle fonction comme ceci :
+
+```bash
+function hello() {
+  echo "Hello World"
+}
+```
+
+Puis recharge ton shell (voir ci-dessous).
 
 ---
 
-## 💡 Astuce
+## 🔄 Activer les modifications
 
-Vous pouvez modifier ou ajouter d’autres choix dans la fonction `tools` pour automatiser encore plus de tâches utiles (compter les lignes, rechercher un mot, ouvrir un fichier, etc.).
+### ✅ Sous **WSL (Zsh)**
+
+```bash
+source ~/.zshrc
+```
+
+ou
+
+```bash
+reload  # si tu as défini alias reload="source ~/.zshrc"
+```
+
+### ✅ Sous **Git Bash**
+
+```bash
+source ~/.bashrc
+```
+
+Ou redémarre Git Bash.
 
 ---
 
-## 🔒 Compatibilité
+## 🧠 Astuces et alias
 
-* ✅ Git Bash sous Windows
-* ✅ Terminal Bash sous Linux ou WSL
+Ajoute dans ton `~/.zshrc` ou `~/.bashrc` :
+
+```bash
+# Accès rapide
+alias zshconfig="code ~/.zshrc"
+alias bashconfig="code ~/.bashrc"
+alias reload="source ~/.zshrc"
+```
+
+---
+
+## ✅ Pré-requis
+
+* [x] Avoir installé [`gh`](https://cli.github.com/)
+* [x] Être connecté via `gh auth login`
+* [x] Avoir cloné ou créé ce dossier `dev-tools`
+
+---
+
+## ✅ Exemple
+
+```bash
+tools
+# ↪ Choix : 1 → structure.txt
+# ↪ Choix : 6 → ouvre le menu GitHub
+```
+
+```bash
+github
+# ↪ Choix : 1 → Créer un nouveau dépôt GitHub
+```
+
+---
+
+## 🛠️ TODO (Améliorations à venir)
+
+* [ ] Créer une commande `devtools` globale qui fusionne `tools` + `github`
+* [ ] Ajouter un script `install.sh` pour tout configurer automatiquement (`.zshrc`, `.bashrc`, `alias`, etc.)
+* [ ] Créer une version **portable** du dossier (archivable ou clonable sur un autre PC ou en cloud)
+* [ ] Ajouter un log (`logs/github.log`) pour tracer les actions
+* [ ] Ajouter une fonction `openrepo` pour ouvrir le dépôt GitHub courant
+* [ ] Ajouter une fonction `gitstatusall` pour voir l'état de plusieurs dépôts
+* [ ] Ajouter un raccourci `ghpush` qui crée le dépôt si inexistant (`gh repo create ...`)
+* [ ] Générer un README automatique avec `tools` ou `github`
+
+---
+
+## 👤 Auteur
+
+**Wilfried**
+
+> Terminal addict · DevOps-curieux · Indie Hacker
+> 📍 Terminal préféré : Zsh (WSL) + Git Bash
+> 🔗 GitHub : [github.com/wilonweb](https://github.com/wilonweb)
 
 ```
