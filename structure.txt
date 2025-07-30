@@ -1,0 +1,92 @@
+.
+├── .git
+│   ├── COMMIT_EDITMSG
+│   ├── config
+│   ├── description
+│   ├── HEAD
+│   ├── hooks
+│   │   ├── applypatch-msg.sample
+│   │   ├── commit-msg.sample
+│   │   ├── fsmonitor-watchman.sample
+│   │   ├── post-update.sample
+│   │   ├── pre-applypatch.sample
+│   │   ├── pre-commit.sample
+│   │   ├── pre-merge-commit.sample
+│   │   ├── pre-push.sample
+│   │   ├── pre-rebase.sample
+│   │   ├── pre-receive.sample
+│   │   ├── prepare-commit-msg.sample
+│   │   ├── push-to-checkout.sample
+│   │   ├── sendemail-validate.sample
+│   │   ├── update.sample
+│   ├── index
+│   ├── info
+│   │   ├── exclude
+│   ├── logs
+│   │   ├── HEAD
+│   │   ├── refs
+│   │   │   ├── heads
+│   │   │   │   ├── master
+│   │   │   ├── remotes
+│   │   │   │   ├── origin
+│   │   │   │   │   ├── master
+│   ├── objects
+│   │   ├── 04
+│   │   │   ├── 7875c335921fcd24c0064387b44a872a4b5951
+│   │   ├── 14
+│   │   │   ├── af7d72a3751b68cc455d482075b42f864f986f
+│   │   ├── 1f
+│   │   │   ├── 1a1d93d0c502d9851381603667ee63e6b61562
+│   │   │   ├── 2ebac43df051c1d6976e64b31b659eb40ff7e1
+│   │   ├── 39
+│   │   │   ├── 04479188bb132b387d630cb0b0d39e609d0004
+│   │   ├── 3c
+│   │   │   ├── 224071534a78297fa05a5cafec97bba570ec1e
+│   │   ├── 3d
+│   │   │   ├── da5fe32960bdf11d1270e2176bc8b5f30d94cd
+│   │   ├── 51
+│   │   │   ├── 8de4b86a404d3fbd4a42145a45d3f290559dc6
+│   │   ├── 62
+│   │   │   ├── 23e2719a5210ffca904c1dc445bf63a2ca5337
+│   │   ├── a9
+│   │   │   ├── 733369314bf74df25946b8f7f79714a65daaca
+│   │   ├── b8
+│   │   │   ├── 85dee310dffbca79eaeb3c5e1998a7ce20f37c
+│   │   ├── c1
+│   │   │   ├── 7ff01f5db2bfe61cfc99483a2d2ef3d078abcb
+│   │   ├── cd
+│   │   │   ├── 42bbb18b1106197e5c67ee27f8ea341312def4
+│   │   ├── df
+│   │   │   ├── af4a5b20565ddacbe67cdf7659763977d7fb69
+│   │   ├── e8
+│   │   │   ├── 52ab969d61289122e3c5b8211d04f39f1fcb0d
+│   │   ├── fa
+│   │   │   ├── 58928a42a3a37780de1da1cdca910723892f8d
+│   │   ├── fb
+│   │   │   ├── 9874e2ea7366b449415960c0b47c9e7adb5974
+│   │   ├── info
+│   │   ├── pack
+│   ├── refs
+│   │   ├── heads
+│   │   │   ├── master
+│   │   ├── remotes
+│   │   │   ├── origin
+│   │   │   │   ├── master
+│   │   ├── tags
+├── bash-tools
+│   ├── bashrc.sh
+│   ├── get-structure.sh
+│   ├── README.md
+├── github-tools
+│   ├── create-repo.sh
+│   ├── delete-repo.sh
+│   ├── Journal.md
+│   ├── list-repo.sh
+│   ├── liste-sh-concat.txt
+│   ├── liste-template.sh
+│   ├── make-public.sh
+│   ├── private-all.sh
+│   ├── README.md
+│   ├── scripts.md
+│   ├── togle-visibility.sh
+├── structure.txt

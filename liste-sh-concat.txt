@@ -1,0 +1,288 @@
+===== ./bash-tools/bashrc.sh =====
+# ────────────────────────────────────────────────────────────────
+# 📌 Fonction Bash nommée `tools`
+# 📁 Objectif : outil rapide pour analyser la structure d’un dossier
+# 🔧 Actions proposées :
+#   1. Générer un fichier `structure.txt` avec l’arborescence
+#   2. Lister tous les fichiers `.sh`
+#   3. Concaténer tous les `.js` dans un fichier avec titres
+#   4. Concaténer tous les `.sh` dans un fichier avec titres
+#   5. Concaténer tous les `.md` dans un fichier avec titres
+#   6. Quitter le menu
+# 🧠 À coller dans ton ~/.bashrc ou ~/.zshrc
+# 🔁 À recharger avec : source ~/.bashrc
+# 📦 Utilisation : tape `tools` dans ton terminal
+# ────────────────────────────────────────────────────────────────
+
+function tools() {
+  echo "Que veux-tu faire ?"
+  echo "1) Afficher l'arborescence (structure.txt)"
+  echo "2) Lister les fichiers .sh (liste-sh.txt)"
+  echo "3) Concaténer les .js avec titres (liste-js.txt)"
+  echo "4) Concaténer les .sh avec titres (liste-sh-concat.txt)"
+  echo "5) Concaténer les .md avec titres (liste-md.txt)"
+  echo "6) Quitter"
+  read -p "Ton choix : " choice
+
+  case $choice in
+    1)
+      echo "📁 Génération de l'arborescence dans structure.txt..."
+      # Affiche une structure arborescente avec indentations
+      find . | awk -F/ '{ indent = ""; for(i=2; i<NF; i++) indent = indent "│   "; if (NF>1) print indent "├── " $NF; else print $0; }' > structure.txt
+      echo "✅ Terminé"
+      ;;
+    2)
+      echo "🔍 Liste des fichiers .sh dans liste-sh.txt..."
+      # Liste tous les fichiers .sh et les enregistre
+      find . -type f -name "*.sh" > liste-sh.txt
+      echo "✅ Terminé"
+      ;;
+    3)
+      echo "📜 Concaténation des fichiers .js avec titres dans liste-js.txt..."
+      > liste-js.txt
+      find . -type f -name "*.js" | while read -r file; do
+        echo "===== $file =====" >> liste-js.txt
+        cat "$file" >> liste-js.txt
+        echo -e "\n" >> liste-js.txt
+      done
+      echo "✅ Terminé"
+      ;;
+    4)
+      echo "📜 Concaténation des fichiers .sh avec titres dans liste-sh-concat.txt..."
+      > liste-sh-concat.txt
+      find . -type f -name "*.sh" | while read -r file; do
+        echo "===== $file =====" >> liste-sh-concat.txt
+        cat "$file" >> liste-sh-concat.txt
+        echo -e "\n" >> liste-sh-concat.txt
+      done
+      echo "✅ Terminé"
+      ;;
+    5)
+      echo "📘 Concaténation des fichiers .md avec titres dans liste-md.txt..."
+      > liste-md.txt
+      find . -type f -name "*.md" | while read -r file; do
+        echo "===== $file =====" >> liste-md.txt
+        cat "$file" >> liste-md.txt
+        echo -e "\n" >> liste-md.txt
+      done
+      echo "✅ Terminé"
+      ;;
+    6)
+      echo "👋 Bye !"
+      ;;
+    *)
+      echo "❌ Choix invalide"
+      ;;
+  esac
+}
+
+
+===== ./bash-tools/get-structure.sh =====
+# Affiche la structure parent enfant d'un dossier. 
+find . | awk -F/ '{ 
+  indent = "";
+  for(i=2; i<NF; i++) indent = indent "│   ";
+  if (NF>1) print indent "├── " $NF;
+  else print $0;
+}' > structure.txt
+
+# Affiche les fichier .sh du dossier et sous dossier
+find . -type f -name "*.sh" > liste-sh.txt
+
+
+===== ./bash-tools/github.sh =====
+#!/bin/bash
+
+# ───────────────────────────────────────────────
+# 📁 Menu GitHub CLI : github()
+# 📌 Permet de lancer des actions GitHub depuis un menu
+# ───────────────────────────────────────────────
+
+function github() {
+  echo "🧰 Menu GitHub"
+  echo "1) Créer un repo"
+  echo "2) Supprimer un repo"
+  echo "3) Lister mes repos"
+  echo "4) Passer un repo en public"
+  echo "5) Tout passer en privé"
+  echo "6) Changer visibilité d’un repo"
+  echo "7) Quitter"ls
+  read -p "Ton choix : " choice
+
+  case $choice in
+    1) bash github-tools/create-repo.sh ;;
+    2) bash github-tools/delete-repo.sh ;;
+    3) bash github-tools/list-repo.sh ;;
+    4) bash github-tools/make-public.sh ;;
+    5) bash github-tools/private-all.sh ;;
+    6) bash github-tools/togle-visibility.sh ;;
+    7) echo "👋 À bientôt" ;;
+    *) echo "❌ Choix invalide" ;;
+  esac
+}
+
+
+===== ./github-tools/create-repo.sh =====
+#!/bin/bash
+
+echo "🚀 Création d’un nouveau dépôt GitHub"
+
+# Demande le nom du repo (nom du dossier courant par défaut)
+default_name=$(basename "$PWD")
+read -p "📝 Nom du dépôt [$default_name] : " repo_name
+repo_name=${repo_name:-$default_name}
+
+# Demande une description
+read -p "📄 Description du dépôt : " description
+
+# Demande la visibilité
+echo "🔐 Visibilité :"
+select visibility in "public" "private"; do
+  if [[ "$visibility" == "public" || "$visibility" == "private" ]]; then
+    break
+  else
+    echo "❌ Choix invalide. Réessaie."
+  fi
+done
+
+# Crée le repo GitHub
+echo "🔧 Création du dépôt distant sur GitHub..."
+gh repo create "$repo_name" --"$visibility" --description "$description" --source=. --remote=origin --push
+
+if [ $? -eq 0 ]; then
+  echo "✅ Dépôt '$repo_name' créé avec succès et lié à ton dossier local."
+else
+  echo "❌ Échec de la création du dépôt."
+fi
+
+
+===== ./github-tools/delete-repo.sh =====
+#!/bin/bash
+
+echo "🗑️ Suppression d'un dépôt GitHub"
+
+read -p "🔧 Nom du repo (ex: mon-repo ou wilonweb/mon-repo) : " INPUT
+
+if [[ "$INPUT" == *"/"* ]]; then
+  REPO="$INPUT"
+else
+  REPO="wilonweb/$INPUT"
+fi
+
+echo "⚠️ Tu t'apprêtes à supprimer le dépôt : $REPO"
+echo "🚨 Cette action est irréversible !"
+
+read -p "✋ Confirmer la suppression ? (o/n) : " CONFIRM
+
+if [[ "$CONFIRM" != "o" ]]; then
+  echo "❌ Annulé."
+  exit 1
+fi
+
+gh repo delete "$REPO" --confirm
+
+
+===== ./github-tools/list-repo.sh =====
+#!/bin/bash
+
+# Nom de ton utilisateur GitHub
+USERNAME="wilonweb"
+
+echo "🔍 Quel type de dépôts veux-tu afficher ?"
+echo "1) Tous les dépôts"
+echo "2) Dépôts publics"
+echo "3) Dépôts privés"
+echo "4) Dépôts template (modèles)"  # ✅ Ajout ici
+read -p "#? " choice
+
+case $choice in
+  1)
+    echo "📦 Tous les dépôts :"
+    gh repo list "$USERNAME" --limit 100
+    ;;
+  2)
+    echo "🌐 Dépôts publics :"
+    gh repo list "$USERNAME" --visibility public --limit 100
+    ;;
+  3)
+    echo "🔐 Dépôts privés :"
+    gh repo list "$USERNAME" --visibility private --limit 100
+    ;;
+  4)
+    echo "📁 Dépôts template (modèles) :"
+    gh repo list "$USERNAME" --source --json name,isTemplate,visibility \
+      -q '.[] | select(.isTemplate==true) | "\(.visibility | ascii_upcase) - \(.name)"'
+    ;;
+  *)
+    echo "❌ Choix invalide. Veuillez entrer un chiffre entre 1 et 4."
+    ;;
+esac
+
+
+===== ./github-tools/liste-template.sh =====
+
+
+gh repo list wilonweb --source --json name,isTemplate,visibility -q '.[] | select(.isTemplate==true) | "\(.visibility | ascii_upcase) - \(.name)"'
+
+===== ./github-tools/make-public.sh =====
+#!/bin/bash
+
+echo "🔓 Passage d’un dépôt GitHub en public"
+read -p "Nom du dépôt (ex: mon-repo) : " repo
+
+# Ajoute ton nom d'utilisateur GitHub ici si absent
+username="wilonweb"
+
+echo "🚀 Passage en public de https://github.com/$username/$repo..."
+
+gh repo edit "$username/$repo" \
+  --visibility public \
+  --accept-visibility-change-consequences && \
+  echo "✅ Le dépôt est maintenant public." || \
+  echo "❌ Une erreur s'est produite."
+
+
+===== ./github-tools/private-all.sh =====
+#!/bin/bash
+
+# Ce script rend tous tes repos en privé (⚠️ irréversible sauf manuellement)
+
+echo "🔐 Début : rendre tous les dépôts privés..."
+gh repo list $USER --limit 100 --json name,visibility --jq '.[] | select(.visibility == "public") | .name' |
+while read repo; do
+  echo "➡️  Repo : $repo → privé"
+  gh repo edit "$USER/$repo" --visibility private
+done
+echo "✅ Tous les dépôts publics sont maintenant privés."
+
+
+===== ./github-tools/togle-visibility.sh =====
+#!/bin/bash
+
+echo "🔁 Changement de visibilité d'un dépôt GitHub"
+
+read -p "🔧 Nom du repo (ex: wilonweb/mon-repo) : " REPO
+read -p "🎯 Nouvelle visibilité (public/private) : " VISIBILITY
+
+if [[ "$VISIBILITY" != "public" && "$VISIBILITY" != "private" ]]; then
+  echo "❌ Visibilité invalide. Choisis 'public' ou 'private'."
+  exit 1
+fi
+
+echo "⚠️ Tu vas modifier la visibilité du dépôt : $REPO → $VISIBILITY"
+read -p "✅ Confirmer ? (o/n) : " CONFIRM
+
+if [[ "$CONFIRM" != "o" ]]; then
+  echo "❌ Opération annulée."
+  exit 1
+fi
+
+gh repo edit "$REPO" --visibility "$VISIBILITY" --accept-visibility-change-consequences
+
+if [ $? -eq 0 ]; then
+  echo "✅ Visibilité mise à jour avec succès pour $REPO"
+else
+  echo "❌ Échec de la mise à jour. Vérifie le nom du repo et ton accès."
+fi
+
+

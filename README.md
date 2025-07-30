@@ -1,49 +1,120 @@
-# 🔧 gh-tools
+# 🐙 GitHub Tools — Scripts CLI GitHub + Menu Terminal
 
-Scripts CLI pour gérer ses dépôts GitHub plus rapidement depuis le terminal.
+Ce dossier contient des **scripts Bash** qui automatisent des actions GitHub via l'outil [`gh`](https://cli.github.com/).  
+Ils sont accessibles via un **menu terminal interactif** avec la commande :
 
-## 📁 Ce que contient ce dossier
-
-Voici les scripts que tu peux utiliser :
-
-| Script                | Description                                               |
-|----------------------|-----------------------------------------------------------|
-| `list-repo.sh`       | Affiche tous tes dépôts GitHub (all, public, private)     |
-| `private-all.sh`     | Rend tous tes dépôts publics → privés                     |
-| `toggle-visibility.sh` | Change la visibilité d’un dépôt (public/private)        |
-| `delete-repo.sh`     | Supprime un dépôt GitHub (⚠️ action irréversible)        |
+```bash
+github
+````
 
 ---
 
-## ⚙️ Pré-requis
+## 📁 Contenu
 
-- GitHub CLI (`gh`) installé
-- Connexion établie avec `gh auth login`
-- Pour certaines actions sensibles comme supprimer un dépôt :
+| Script                | Description                               |
+| --------------------- | ----------------------------------------- |
+| `create-repo.sh`      | Crée un nouveau dépôt GitHub              |
+| `delete-repo.sh`      | Supprime un dépôt GitHub                  |
+| `list-repo.sh`        | Liste tous les dépôts                     |
+| `make-public.sh`      | Rend un dépôt public                      |
+| `private-all.sh`      | Rend tous les dépôts privés               |
+| `togle-visibility.sh` | Modifie la visibilité d’un dépôt          |
+| `liste-template.sh`   | Liste les dépôts configurés comme modèles |
 
+> ⚠️ Tous ces scripts nécessitent l'outil `gh`. Connecte-toi une fois avec :
 
-## 🧠 Améliorations
+```bash
+gh auth login
+```
 
-### 🔄 Organisation
+---
 
-* Regrouper tous les scripts dans un sous-dossier `cli/` ou `scripts/` pour plus de clarté.
-* Ajouter un script `setup.sh` pour rendre tous les `.sh` exécutables automatiquement (`chmod +x *.sh`).
-* Ajouter un script de test automatique pour valider les accès (`gh auth status` + test de requête API).
+## 🚀 Utilisation rapide
 
-### 📖 Documentation
+```bash
+github   # Ouvre le menu GitHub CLI
+tools    # Ouvre le menu pour fichiers (concaténation, structure…)
+```
 
-* Ajouter une structure de dossier dans le `README.md` avec `tree` ou un bloc ascii.
-* Ajouter une section "Utilisation rapide" avec les commandes les plus utiles.
-* Ajouter un lien vers la doc GitHub CLI officielle : [https://cli.github.com/manual/](https://cli.github.com/manual/)
+Chaque option guide l'utilisateur pas à pas.
 
-### 🧪 UX des scripts
+---
 
-* Ajouter des **vérifications automatiques** dans chaque script : est-ce que le repo existe ? est-ce que l’utilisateur a les droits ?
-* Ajouter une option `--yes` dans les confirmations (mode non-interactif).
-* Pour `list-repo.sh`, proposer une option en ligne de commande directe : `./list-repo.sh public`
+## ⚙️ Ajouter ou modifier des fonctions terminal
 
-### 💡 Nouvelles fonctionnalités
+Toutes tes fonctions perso (`tools`, `github`, etc.) sont regroupées dans :
 
-* Ajouter un script `clone-all.sh` : cloner tous ses repos GitHub automatiquement.
-* Ajouter un script `archive-old-repos.sh` : archiver automatiquement les vieux repos (> 6 mois sans push).
-* Ajouter un script `rename-repo.sh` : renommer un repo à la volée.
+```
+~/Documents/VisualStudioCode/dev-tools/bash-tools/bashrc.sh
+```
+
+Pour ajouter une nouvelle commande (`function mafonction() { ... }`), édite simplement ce fichier.
+
+---
+
+## 🔄 Activer les modifications
+
+### ✅ Sous **Git Bash**
+
+Après modification de `bashrc.sh`, tape :
+
+```bash
+source ~/.bashrc
+```
+
+Ou redémarre Git Bash.
+
+---
+
+### ✅ Sous **WSL (Ubuntu / Zsh)**
+
+Après modification de `bashrc.sh`, tape :
+
+```bash
+source ~/.zshrc
+```
+
+Ou utilise l’alias si configuré :
+
+```bash
+reload
+```
+
+---
+
+## 🧠 Aliases recommandés
+
+Dans `.zshrc` (ou `.bashrc`), ajoute :
+
+```bash
+alias zshconfig="code ~/.zshrc"
+alias reload="source ~/.zshrc"
+```
+
+---
+
+## ✅ TODO / Améliorations à venir
+
+* [ ] Ajouter un menu `devtools` global regroupant `tools`, `github`, etc.
+* [ ] Ajouter un fichier `.env` pour centraliser des variables (nom utilisateur GitHub…)
+* [ ] Ajouter un mode `dry-run` (prévisualisation) avant action
+* [ ] Ajouter un `install.sh` pour configurer automatiquement `.bashrc` et `.zshrc`
+* [ ] Ajouter un système de log des actions (`logs/github.log`)
+* [ ] Créer une version **portable** de cette configuration, pour la réutiliser facilement sur d'autres PC ou dans le cloud (type script d'installation ou dépôt clonable)
+
+---
+
+## 📝 Journal de développement
+
+Voir [`Journal.md`](./Journal.md)
+
+---
+
+## 👤 Auteur
+
+**Wilfried**
+
+> Passionné de scripting, automatisation, DevOps, et indie hacking
+> Terminal favori : `Zsh` + `Git Bash`
+> 💻 Objectif : une boîte à outils CLI réutilisable partout
+
