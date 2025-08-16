@@ -1,7 +1,9 @@
 ./bash-tools/bashrc.sh
 ./bash-tools/get-structure.sh
+./bash-tools/github.sh
 ./github-tools/create-repo.sh
 ./github-tools/delete-repo.sh
+./github-tools/gh-sync.sh
 ./github-tools/list-repo.sh
 ./github-tools/liste-template.sh
 ./github-tools/make-public.sh

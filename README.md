@@ -157,10 +157,4 @@ github
 
 ## 👤 Auteur
 
-**Wilfried**
-
-> Terminal addict · DevOps-curieux · Indie Hacker
-> 📍 Terminal préféré : Zsh (WSL) + Git Bash
-> 🔗 GitHub : [github.com/wilonweb](https://github.com/wilonweb)
-
-```
+**Wilonweb** > 🔗 GitHub : [github.com/wilonweb](https://github.com/wilonweb)

@@ -1,15 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
 echo "🔓 Passage d’un dépôt GitHub en public"
-read -p "Nom du dépôt (ex: mon-repo) : " repo
+read -r -p "Nom du dépôt (ex: mon-repo) : " repo
+USERNAME="${USERNAME:-$(gh api user --jq .login)}"
 
-# Ajoute ton nom d'utilisateur GitHub ici si absent
-username="wilonweb"
-
-echo "🚀 Passage en public de https://github.com/$username/$repo..."
-
-gh repo edit "$username/$repo" \
-  --visibility public \
-  --accept-visibility-change-consequences && \
-  echo "✅ Le dépôt est maintenant public." || \
-  echo "❌ Une erreur s'est produite."
+echo "🚀 $USERNAME/$repo → public…"
+gh repo edit "$USERNAME/$repo" --visibility public --accept-visibility-change-consequences \
+  && echo "✅ OK" || echo "❌ Erreur"

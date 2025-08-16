@@ -1,23 +1,18 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
 echo "🗑️ Suppression d'un dépôt GitHub"
-
-read -p "🔧 Nom du repo (ex: mon-repo ou wilonweb/mon-repo) : " INPUT
+read -r -p "🔧 Nom du repo (ex: mon-repo ou wilonweb/mon-repo) : " INPUT
 
 if [[ "$INPUT" == *"/"* ]]; then
   REPO="$INPUT"
 else
-  REPO="wilonweb/$INPUT"
+  USERNAME="$(gh api user --jq .login)"
+  REPO="$USERNAME/$INPUT"
 fi
 
-echo "⚠️ Tu t'apprêtes à supprimer le dépôt : $REPO"
-echo "🚨 Cette action est irréversible !"
-
-read -p "✋ Confirmer la suppression ? (o/n) : " CONFIRM
-
-if [[ "$CONFIRM" != "o" ]]; then
-  echo "❌ Annulé."
-  exit 1
-fi
+echo "⚠️ Tu vas supprimer : $REPO (irréversible)"
+read -r -p "✋ Confirmer ? (o/n) : " CONFIRM
+[[ "$CONFIRM" == "o" ]] || { echo "❌ Annulé."; exit 1; }
 
 gh repo delete "$REPO" --confirm

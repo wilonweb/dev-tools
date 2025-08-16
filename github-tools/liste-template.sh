@@ -1,3 +1,5 @@
-
-
-gh repo list wilonweb --source --json name,isTemplate,visibility -q '.[] | select(.isTemplate==true) | "\(.visibility | ascii_upcase) - \(.name)"'
+#!/usr/bin/env bash
+set -euo pipefail
+USERNAME="${USERNAME:-wilonweb}"
+gh repo list "$USERNAME" --limit 200 --json name,isTemplate,visibility \
+  --jq '.[] | select(.isTemplate==true) | "\(.visibility | ascii_upcase) - \(.name)"'
