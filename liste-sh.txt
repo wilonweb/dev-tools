@@ -8,4 +8,4 @@
 ./github-tools/liste-template.sh
 ./github-tools/make-public.sh
 ./github-tools/private-all.sh
-./github-tools/togle-visibility.sh
+./github-tools/toggle-visibility.sh

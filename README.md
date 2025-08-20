@@ -1,3 +1,5 @@
+Ajouter le fait qu'on est mis la concatenation multiple avec Python etc
+
 # ⚙️ Dev Tools — Outils de Terminal pour GitHub & Fichiers
 
 Ce dossier regroupe des **fonctions Bash/Zsh personnalisées**, regroupées dans deux menus :
