@@ -154,6 +154,7 @@ github
 * [ ] Ajouter une fonction `gitstatusall` pour voir l'état de plusieurs dépôts
 * [ ] Ajouter un raccourci `ghpush` qui crée le dépôt si inexistant (`gh repo create ...`)
 * [ ] Générer un README automatique avec `tools` ou `github`
+* [ ] Ignorer des fichier a concatener genre "node_modules" etc 
 
 ---
 

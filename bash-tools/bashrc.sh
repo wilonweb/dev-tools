@@ -1,116 +1,167 @@
 # ────────────────────────────────────────────────────────────────
-# 📦 Fonctions Bash/Zsh pour outils perso (tools + github)
-# 📁 À sourcer dans ~/.zshrc ou ~/.bashrc
-# 🔁 Utiliser `source ~/.zshrc` ou `reload` après modif
+# 📦 TOOLS (1: structure, 2: lister, 3: concat, 4: github, 5: quit)
 # ────────────────────────────────────────────────────────────────
 
-# 🔧 Helper : concaténer des fichiers correspondant à plusieurs motifs
-# Usage: concat_files "sortie.txt" "*.js" "*.py" "Dockerfile"
-function concat_files() {
-  local outfile="$1"; shift
-  : > "$outfile"  # vide/crée le fichier de sortie
+# Helpers ---------------------------------------------------------
 
-  # Assoc array pour éviter les doublons si un fichier matche plusieurs motifs
-  # (nécessite bash >= 4 ; sous zsh, ça passe aussi via emulate bash)
-  declare -A seen
-
-  # Parcourt chaque motif et ajoute les fichiers trouvés
-  for pattern in "$@"; do
-    if [[ "$pattern" == "Dockerfile" ]]; then
-      # Gère Dockerfile (avec ou sans casse, et sous-répertoires)
-      while IFS= read -r -d '' file; do
-        [[ -n "${seen[$file]}" ]] && continue
-        seen[$file]=1
-        echo "===== $file =====" >> "$outfile"
-        cat "$file" >> "$outfile"
-        echo -e "\n" >> "$outfile"
-      done < <(find . -type f \( -name "Dockerfile" -o -iname "dockerfile" \) -print0)
-    else
-      # Motif standard (ex: *.js, *.py, *.md, *.sh)
-      while IFS= read -r -d '' file; do
-        [[ -n "${seen[$file]}" ]] && continue
-        seen[$file]=1
-        echo "===== $file =====" >> "$outfile"
-        cat "$file" >> "$outfile"
-        echo -e "\n" >> "$outfile"
-      done < <(find . -type f -iname "$pattern" -print0)
-    fi
-  done
-
-  echo "✅ Terminé → $outfile"
+_str_to_array() {  # "a b c" -> ["a","b","c"]
+  local s="$1"; local -n _out="$2"
+  _out=(); for d in $s; do _out+=("$d"); done
 }
 
-# 🔧 Menu TOOLS
-function tools() {
+_build_types_expr() {  # map types connus + globs -> expr find
+  local -a in_patterns=("$@")
+  local -a expr=()
+  for p in "${in_patterns[@]}"; do
+    case "$p" in
+      js)   expr+=( -iname '*.js' -o -iname '*.mjs' -o -iname '*.cjs' -o ) ;;
+      ts)   expr+=( -iname '*.ts' -o -iname '*.tsx' -o ) ;;
+      py)   expr+=( -iname '*.py' -o ) ;;
+      sh)   expr+=( -iname '*.sh' -o ) ;;
+      md)   expr+=( -iname '*.md' -o -iname '*.markdown' -o ) ;;
+      docker)
+        expr+=(
+          -iname 'Dockerfile' -o
+          -iname 'Dockerfile.*' -o
+          -iname '*.dockerfile' -o
+          -iname '.dockerignore' -o
+          -iname 'docker-compose*.yml' -o
+          -iname 'docker-compose*.yaml' -o
+          -iname 'compose.yml' -o
+          -iname 'compose.yaml' -o
+          -path '*/docker/*' -o
+        )
+        ;;
+      *)    expr+=( -iname "$p" -o ) ;;  # glob brut tel quel (ex: *.yml, Makefile)
+    esac
+  done
+  [[ ${#expr[@]} -gt 0 && "${expr[-1]}" == "-o" ]] && unset 'expr[-1]'
+  printf '%s\n' "${expr[@]}"
+}
 
-  # --- helper: exécuter une option ---
-  run_tools_choice() {
+_build_prune_expr() {  # "node_modules .git dist" -> expr prune robuste
+  local ignores="$1"
+  local -a ig=(); _str_to_array "$ignores" ig
+  local -a prune=()
+  for d in "${ig[@]}"; do
+    d="${d%/}"                       # enlève trailing slash éventuel
+    [[ -z "$d" ]] && continue
+    # On match le dossier et tout son contenu, insensible à la casse.
+    prune+=( -ipath "*/$d" -o -ipath "*/$d/*" -o )
+  done
+  [[ ${#prune[@]} -gt 0 ]] && unset 'prune[-1]'
+  printf '%s\n' "${prune[@]}"
+}
+
+_find_files() {  # uses arrays; no eval
+  local ignores="$1"; shift
+  local -a types_expr=("$@")
+  local -a prune_expr=(); mapfile -t prune_expr < <(_build_prune_expr "$ignores")
+
+  if ((${#prune_expr[@]})); then
+    # -prune bloque la descente; '-o' passe à la branche fichiers
+    find . \( "${prune_expr[@]}" \) -prune -o -type f \( "${types_expr[@]}" \) -print0
+  else
+    find . -type f \( "${types_expr[@]}" \) -print0
+  fi
+}
+
+_print_structure() {
+  local ignores="$1"
+  local -a prune_expr=(); mapfile -t prune_expr < <(_build_prune_expr "$ignores")
+  if ((${#prune_expr[@]})); then
+    find . \( "${prune_expr[@]}" \) -prune -o -print \
+    | awk -F/ '{
+        indent=""; for(i=2;i<NF;i++) indent=indent"│   ";
+        if (NF>1) print indent "├── " $NF; else print $0;
+      }'
+  else
+    find . -print \
+    | awk -F/ '{
+        indent=""; for(i=2;i<NF;i++) indent=indent"│   ";
+        if (NF>1) print indent "├── " $NF; else print $0;
+      }'
+  fi
+}
+
+_list_files() {
+  local ignores="$1"; shift
+  local outfile="$1"; shift
+  local -a patterns=("$@")
+
+  mapfile -t types_expr < <(_build_types_expr "${patterns[@]}")
+  if ((${#types_expr[@]}==0)); then echo "❌ Aucun motif/type."; return 1; fi
+
+  : > "$outfile"
+  while IFS= read -r -d $'\0' f; do
+    printf '%s\n' "$f" >> "$outfile"
+  done < <(_find_files "$ignores" "${types_expr[@]}")
+  echo "✅ Liste écrite → $outfile"
+}
+
+_concat_files() {
+  local ignores="$1"; shift
+  local outfile="$1"; shift
+  local -a patterns=("$@")
+
+  mapfile -t types_expr < <(_build_types_expr "${patterns[@]}")
+  if ((${#types_expr[@]}==0)); then echo "❌ Aucun motif/type."; return 1; fi
+
+  : > "$outfile"
+  declare -A seen
+  while IFS= read -r -d $'\0' f; do
+    [[ -n "${seen[$f]}" ]] && continue
+    seen[$f]=1
+    {
+      echo "===== $f ====="
+      cat "$f"
+      echo
+    } >> "$outfile"
+  done < <(_find_files "$ignores" "${types_expr[@]}")
+  echo "✅ Concat terminé → $outfile"
+}
+
+# Menu ------------------------------------------------------------
+
+tools() {
+  run_choice() {
     case "$1" in
       1)
-        echo "📁 Génération de structure.txt..."
-        find . | awk -F/ '{ indent = ""; for(i=2;i<NF;i++) indent=indent"│   "; if(NF>1) print indent "├── " $NF; else print $0; }' > structure.txt
-        echo "✅ Terminé"
+        echo -n "🧹 Dossiers à ignorer pour la STRUCTURE (ex: node_modules .git dist) : "
+        read ignores
+        echo "📁 Génération de structure.txt (ignores: ${ignores:-aucun})..."
+        _print_structure "$ignores" > structure.txt
+        echo "✅ structure.txt prêt"
         ;;
       2)
-        echo "🔍 Liste des fichiers .sh..."
-        find . -type f -name "*.sh" > liste-sh.txt
-        echo "✅ Terminé"
+        echo "🔎 Lister des fichiers par types/globs"
+        echo "   Types connus: js py sh md ts docker  |  Globs: *.tsx *.yml Dockerfile Makefile"
+        echo -n "   Motifs/types (séparés par espaces) : "
+        read line; [[ -z "$line" ]] && { echo "❌ Aucun motif."; return; }
+        read -r -a patterns <<< "$line"
+        echo -n "🧹 Dossiers à ignorer (vide = aucun) : "
+        read ignores
+        echo -n "📄 Nom du fichier de sortie (défaut: liste.txt) : "
+        read outfile; [[ -z "$outfile" ]] && outfile="liste.txt"
+        _list_files "$ignores" "$outfile" "${patterns[@]}"
         ;;
       3)
-        echo "📜 Concaténation des fichiers .js..."
-        concat_files "liste-js.txt" "*.js"
+        echo "📚 Concaténer des fichiers par types/globs"
+        echo "   Types connus: js py sh md ts docker  |  Globs: *.tsx *.yml Dockerfile Makefile"
+        echo -n "   Motifs/types (séparés par espaces) : "
+        read line; [[ -z "$line" ]] && { echo "❌ Aucun motif."; return; }
+        read -r -a patterns <<< "$line"
+        echo -n "🧹 Voulez-vous ignorer des dossiers ? (laisser vide si non) : "
+        read ignores
+        echo -n "📄 Nom du fichier de sortie (défaut: concat.txt) : "
+        read outfile; [[ -z "$outfile" ]] && outfile="concat.txt"
+        _concat_files "$ignores" "$outfile" "${patterns[@]}"
         ;;
       4)
-        echo "📜 Concaténation des fichiers .sh..."
-        concat_files "liste-sh-concat.txt" "*.sh"
-        ;;
-      5)
-        echo "📘 Concaténation des fichiers .md..."
-        concat_files "liste-md.txt" "*.md"
-        ;;
-      6)
         github
         ;;
-      7)
-        echo "👋 Bye !"
-        ;;
-      8)
-        echo "🐍 Concaténation des fichiers .py..."
-        concat_files "liste-py.txt" "*.py"
-        ;;
-      9)
-        echo "🐳 Concaténation des Dockerfile..."
-        concat_files "liste-dockerfile.txt" "Dockerfile"
-        ;;
-      10)
-        echo "🧩 Combo personnalisée"
-        echo "   Tape les types séparés par des espaces : js py sh md docker"
-        echo -n "   Types : "
-        read types
-
-        patterns=()
-        for t in $types; do
-          case "$t" in
-            js)     patterns+=('*.js') ;;
-            py)     patterns+=('*.py') ;;
-            sh)     patterns+=('*.sh') ;;
-            md)     patterns+=('*.md') ;;
-            docker) patterns+=('Dockerfile') ;;
-            *) echo "⚠️ Type inconnu ignoré: $t" ;;
-          esac
-        done
-
-        if [[ ${#patterns[@]} -eq 0 ]]; then
-          echo "❌ Aucun type valide fourni."
-          return
-        fi
-
-        echo -n "   Nom du fichier de sortie (defaut: liste-combo.txt) : "
-        read outfile
-        [[ -z "$outfile" ]] && outfile="liste-combo.txt"
-
-        echo "📚 Concaténation → ${patterns[*]}"
-        concat_files "$outfile" "${patterns[@]}"
+      5)
+        echo "👋 Bye"
         ;;
       *)
         echo "❌ Choix invalide: $1"
@@ -118,49 +169,19 @@ function tools() {
     esac
   }
 
-  # --- affichage menu ---
   echo "🧰 Menu TOOLS"
   echo "1) Afficher l'arborescence (structure.txt)"
-  echo "2) Lister les fichiers .sh (liste-sh.txt)"
-  echo "3) Concaténer les .js avec titres (liste-js.txt)"
-  echo "4) Concaténer les .sh avec titres (liste-sh-concat.txt)"
-  echo "5) Concaténer les .md avec titres (liste-md.txt)"
-  echo "6) Menu GitHub"
-  echo "7) Quitter"
-  echo "8) Concaténer les .py (liste-py.txt)"
-  echo "9) Concaténer les Dockerfile (liste-dockerfile.txt)"
-  echo "10) Concaténer combo (ex: js+py, js+docker, py+docker, etc.)"
-  echo -n "Ton choix (ex: 3+2, 3,2, 3 2, 3-5) : "
+  echo "2) Lister les fichiers (filtres: types + globs)"
+  echo "3) Concaténer (filtres: types + globs)"
+  echo "4) Menu GitHub"
+  echo "5) Quitter"
+  echo -n "Ton choix : "
   read raw
-
-  # --- parsing multi-sélection ---
-  # normalise séparateurs: + , ; → espaces
-  input=$(echo "$raw" | tr '+,;' '   ')
-
-  to_run=()
-  for token in $input; do
-    if [[ "$token" =~ ^([0-9]+)-([0-9]+)$ ]]; then
-      start="${BASH_REMATCH[1]}"
-      end="${BASH_REMATCH[2]}"
-      if (( start <= end )); then
-        for ((i=start; i<=end; i++)); do to_run+=("$i"); done
-      else
-        for ((i=start; i>=end; i--)); do to_run+=("$i"); done
-      fi
-    else
-      to_run+=("$token")
-    fi
-  done
-
-  # exécution séquentielle
-  for choice in "${to_run[@]}"; do
-    run_tools_choice "$choice"
-  done
+  for choice in $(echo "$raw" | tr ',+' ' '); do run_choice "$choice"; done
 }
 
-
-# 🧰 Menu GitHub
-function github() {
+# Menu GitHub (à adapter à tes chemins)
+github() {
   echo "🐙 Menu GitHub CLI"
   echo "1) Créer un repo"
   echo "2) Supprimer un repo"
@@ -171,7 +192,6 @@ function github() {
   echo "7) Quitter"
   echo -n "👉 Ton choix : "
   read choice
-
   case $choice in
     1) bash ~/Documents/VisualStudioCode/dev-tools/github-tools/create-repo.sh ;;
     2) bash ~/Documents/VisualStudioCode/dev-tools/github-tools/delete-repo.sh ;;
@@ -179,7 +199,7 @@ function github() {
     4) bash ~/Documents/VisualStudioCode/dev-tools/github-tools/make-public.sh ;;
     5) bash ~/Documents/VisualStudioCode/dev-tools/github-tools/private-all.sh ;;
     6) bash ~/Documents/VisualStudioCode/dev-tools/github-tools/togle-visibility.sh ;;
-    7) echo "👋 À bientôt" ;;
+    7) echo "👋 Retour" ;;
     *) echo "❌ Choix invalide" ;;
   esac
 }
